@@ -1,0 +1,33 @@
+/*
+ * Html5emantichecker
+ * version 0.5
+ * author: Thibaut Van Spaandonck (Urge2code)
+ * http://www.urge2code.com
+ * http://github.com/Urge2code/Html5emantichecker
+ * Licensed under the MIT license.
+*/
+textarea {
+    border: 1px solid #FFAA8B;
+    color: #E77348;
+}
+
+textarea:focus {    
+    background-color: #FFF6E5;
+}
+
+body, textarea {
+    font-family: Helvetica, Arial, sans-serif;
+}
+
+#btnCheck {
+    display: block;
+    padding: 0.5em 2em;
+}
+
+#errorsContainer {
+    color: #C80C0C;
+}
+
+#infosContainer {
+    color: #0CA6C8;
+}
