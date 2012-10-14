@@ -27,6 +27,7 @@
             this._checkTablelessDesign();
             this._checkInputTypes();
         },
+        // "Private" members and functions start with an underscore (see "JavaScript patterns" book)
         _checkMainStructure: function() {
             var essentialTags = ["header", "footer", "nav"],
                 secondaryTags = ["section", "article", "aside"],
