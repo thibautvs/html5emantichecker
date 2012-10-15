@@ -26,32 +26,34 @@
             this._checkIdentifiersAndClasses();
             this._checkTablelessDesign();
             this._checkInputTypes();
+            this._done();
         },
-        // "Private" members and functions start with an underscore (see "JavaScript patterns" book)
         _checkMainStructure: function() {
             var essentialTags = ["header", "footer", "nav"],
                 secondaryTags = ["section", "article", "aside"],
                 that = this;
             $.each(essentialTags, function(index, value) {
                 if (!that._containsTagNotion(value)) {
-                    that._addError("It is strongly recommended that your page contains a &lt;" + value + "&gt; element");
+                    that._shouldBeUsingTagError(value);
                 }
             });
             $.each(secondaryTags, function(index, value) {
                 if (!that._containsTagNotion(value)) {
-                    that._addInfo("You should consider using &lt;" + value + "&gt; elements");
+                    that._shouldConsiderUsingTagInfo(value);
                 }
             });
             this._src.find("p").each(function() {
                 if ($(this).html() === "") {
-                    that._addError("Don't use empty &lt;p&gt; elements to structure your page, use CSS margins instead");
+                    that._useCssMarginsError();
                 }
             });
             // TODO detect at least 2 br tags that follow
         },
         _checkIdentifiersAndClasses: function() {
-            var tagNames = ["header", "footer", "menu", "section", "article", "nav", "aside", "details", "summary",
-                            "figure", "figcaption", "hgroup", "mark", "meter", "progress", "ruby", "time"];
+            var tagNames = [
+                "header", "footer", "menu", "section", "article", "nav", "aside", "details", "summary",
+                "figure", "figcaption", "hgroup", "mark", "meter", "progress", "ruby", "time"
+            ];
             
             for (var i=0 ; i<tagNames.length ; i++) {
                 var currentName = tagNames[i],
@@ -60,24 +62,23 @@
                     eltsHavingClassExist = this._containsElementsHavingClass(currentName);
                 
                 if (eltHavingIdExists) {
-                    this._addError("Replace element having id \"" + currentName + "\" by a &lt;" + relatedTag + "&gt; element");
+                    this._replaceElementHavingIdByTagError(currentName, relatedTag);
                 }
                 if (eltsHavingClassExist) {
-                    this._addError("Replace element having class \"" + currentName + "\" by a &lt;" + relatedTag + "&gt; element");
+                    this._replaceElementHavingClassByTagError(currentName, relatedTag);
                 }
             }
         },
         _checkInputTypes: function() {
-            var hasInputText = this._src.find("input[type='text']").length > 0,
-                inputTypes = ["color", "date", "datetime", "datetime-local", "email", "month", "number", "range", "search", "tel", "time", "url", "week"];
+            var hasInputText = this._src.find("input[type='text']").length > 0;
             if (hasInputText) {
-                this._addInfo("Consider replacing &lt;input type='text'&gt; element(s) with new input types (" + inputTypes.join(", ") + ") when applicable");
+                this._considerUsingNewInputTypesInfo();
             }
         },
         _checkTablelessDesign: function() {
             var hasTables = this._src.find("table").length > 0;
             if (hasTables) {
-                this._addInfo("Presence of &lt;table&gt; element(s) has been detected; be sure to use them only for tabular data and not for layout purposes");
+                this._implementTablelessDesignInfo();
             }
         },
         _containsElementHavingId: function(id) {
@@ -106,6 +107,33 @@
                                    .replace(nbspRegex, "");
             return htmlString;
         },
+        _shouldBeUsingTagError: function(tagName) {
+            this._addError("It is strongly recommended that your page contains a &lt;" + tagName + "&gt; element");
+        },
+        _shouldConsiderUsingTagInfo: function(tagName) {
+            this._addInfo("You should consider using &lt;" + tagName + "&gt; elements");
+        },
+        _useCssMarginsError: function() {
+            this._addError("Don't use empty &lt;p&gt; elements to structure your page, use CSS margins instead");
+        },
+        _replaceElementHavingIdByTagError: function(id, tagName) {
+            this._addError("Replace element having id \"" + id + "\" by a &lt;" + tagName + "&gt; element");
+        },
+        _replaceElementHavingClassByTagError: function(className, tagName) {
+            this._addError("Replace element having class \"" + className + "\" by a &lt;" + tagName + "&gt; element");  
+        },
+        _considerUsingNewInputTypesInfo: function() {
+            var inputTypes = ["color", "date", "datetime", "datetime-local", "email", "month", "number", "range", "search", "tel", "time", "url", "week"];
+            this._addInfo("Consider replacing &lt;input type='text'&gt; element(s) with new input types (" + inputTypes.join(", ") + ") when applicable");
+        },
+        _implementTablelessDesignInfo: function() {
+            this._addInfo("Presence of &lt;table&gt; element(s) has been detected; be sure to use them only for tabular data and not for layout purposes");
+        },
+        _done: function() {
+            if (this._errorCount === 0 && this._infoCount === 0) {
+                this._addInfo("Semantic validation succeeded! Congratulations!");
+            }
+        },
         _addError: function(errorMessage) {
             var item = this._createListItem(errorMessage);
             if (this._errorsList === undefined) {
@@ -113,6 +141,7 @@
                 this._errorsContainer.append(this._errorsList);
             }
             this._errorsList.append(item);
+            this._errorCount++;
         },
         _addInfo: function(infoMessage) {
             var item = this._createListItem(infoMessage);
@@ -121,6 +150,7 @@
                 this._infosContainer.append(this._infosList);
             }
             this._infosList.append(item);
+            this._infoCount++;
         },
         _createListItem: function(message) {
             return $("<li>").html(message);
@@ -129,6 +159,8 @@
             this._empty(this._errorsList);
             this._empty(this._infosList);
             this._empty(this._src);
+            this._errorCount = 0;
+            this._infoCount = 0;
         },
         _empty: function(element) {
             if (element !== undefined) {
@@ -139,6 +171,8 @@
         _infosContainer:undefined,
         _errorsList: undefined,
         _infosList: undefined,
-        _src: undefined
+        _src: undefined,
+        _errorCount: 0,
+        _infoCount: 0
     };
 })(window);
