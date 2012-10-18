@@ -39,23 +39,47 @@
         _checkMainStructure: function() {
             var essentialTags = ["header", "footer", "nav"],
                 secondaryTags = ["section", "article", "aside"],
+                containsBoldTags = this._containsElement("b"),
+                containsItalicTags = this._containsElement("i"),
+                containsUnderlineTags = this._containsElement("u"),
+                containsCenterTags = this._containsElement("center"),
+                containsIframeTags = this._containsElement("iframe"),
+                containsInlineStyles = this._containsElement("[style]"),
                 that = this;
+            
             $.each(essentialTags, function(index, value) {
                 if (!that._containsTagNotion(value)) {
-                    that._shouldBeUsingTagError(value);
+                    that._shouldBeUsingTag(value);
                 }
             });
             $.each(secondaryTags, function(index, value) {
                 if (!that._containsTagNotion(value)) {
-                    that._shouldConsiderUsingTagInfo(value);
+                    that._shouldConsiderUsingTag(value);
                 }
             });
             this._src.find("p").each(function() {
                 if ($(this).html() === "") {
-                    that._useCssMarginsError();
+                    that._useCssMargins();
                 }
-            });
-            // TODO detect at least 2 br tags that follow
+            });            
+            if (containsBoldTags) {
+                this._replaceByTag("b", "strong");
+            }
+            if (containsItalicTags) {
+                this._replaceByTag("i", "em");
+            }
+            if (containsUnderlineTags) {
+                this._useCssInsteadOfTag("u");
+            }
+            if (containsCenterTags) {
+                this._useCssInsteadOfTag("center");
+            }
+            if (containsIframeTags) {
+                this._dontUseTag("iframe");  
+            }
+            if (containsInlineStyles) {
+                this._dontUseInlineStyles();
+            }
         },
         
         _checkIdentifiersAndClasses: function() {
@@ -72,25 +96,25 @@
                     eltsHavingClassExist = this._containsElementsHavingClass(currentName);
                 
                 if (eltHavingIdExists) {
-                    this._replaceElementHavingIdByTagError(currentName, relatedTag);
+                    this._replaceElementHavingIdByTag(currentName, relatedTag);
                 }
                 if (eltsHavingClassExist) {
-                    this._replaceElementHavingClassByTagError(currentName, relatedTag);
+                    this._replaceElementHavingClassByTag(currentName, relatedTag);
                 }
             }
         },
         
         _checkInputTypes: function() {
-            var hasInputText = this._src.find("input[type='text']").length > 0;
+            var hasInputText = this._containsElement("input[type='text']");
             if (hasInputText) {
-                this._considerUsingNewInputTypesInfo();
+                this._considerUsingNewInputTypes();
             }
         },
         
         _checkTablelessDesign: function() {
-            var hasTables = this._src.find("table").length > 0;
+            var hasTables = this._containsElement("table");
             if (hasTables) {
-                this._implementTablelessDesignInfo();
+                this._implementTablelessDesign();
             }
         },
         
@@ -99,7 +123,7 @@
         },
         
         _containsElementsHavingClass: function(className) {
-            return this._src.find("." + className).length > 0;
+            return this._containsElement("." + className);
         },
         
         _containsTagNotion: function(tagName) {
@@ -124,33 +148,8 @@
             return htmlString;
         },
         
-        _shouldBeUsingTagError: function(tagName) {
-            this._addError("It is strongly recommended that your page contains a &lt;" + tagName + "&gt; element");
-        },
-        
-        _shouldConsiderUsingTagInfo: function(tagName) {
-            this._addInfo("You should consider using &lt;" + tagName + "&gt; elements");
-        },
-        
-        _useCssMarginsError: function() {
-            this._addError("Don't use empty &lt;p&gt; elements to structure your page, use CSS margins instead");
-        },
-        
-        _replaceElementHavingIdByTagError: function(id, tagName) {
-            this._addError("Replace element having id \"" + id + "\" by a &lt;" + tagName + "&gt; element");
-        },
-        
-        _replaceElementHavingClassByTagError: function(className, tagName) {
-            this._addError("Replace element having class \"" + className + "\" by a &lt;" + tagName + "&gt; element");  
-        },
-        
-        _considerUsingNewInputTypesInfo: function() {
-            var inputTypes = ["color", "date", "datetime", "datetime-local", "email", "month", "number", "range", "search", "tel", "time", "url", "week"];
-            this._addInfo("Consider replacing &lt;input type='text'&gt; element(s) with new input types (" + inputTypes.join(", ") + ") when applicable");
-        },
-        
-        _implementTablelessDesignInfo: function() {
-            this._addInfo("Presence of &lt;table&gt; element(s) has been detected; be sure to use them only for tabular data and not for layout purposes");
+        _containsElement: function(element) {
+            return this._src.find(element).length > 0;
         },
         
         _done: function() {
@@ -195,6 +194,51 @@
             if (element !== undefined) {
                 element.empty();
             }
+        },
+        
+        _shouldBeUsingTag: function(tagName) {
+            this._addError("It is strongly recommended that your page contains a &lt;" + tagName + "&gt; element");
+        },
+        
+        _shouldConsiderUsingTag: function(tagName) {
+            this._addInfo("You should consider using &lt;" + tagName + "&gt; elements");
+        },
+        
+        _useCssMargins: function() {
+            this._addError("Don't use empty &lt;p&gt; elements to structure your page, use CSS margins instead");
+        },
+        
+        _replaceElementHavingIdByTag: function(id, tagName) {
+            this._addError("Replace element having id \"" + id + "\" by a &lt;" + tagName + "&gt; element");
+        },
+        
+        _replaceElementHavingClassByTag: function(className, tagName) {
+            this._addError("Replace element having class \"" + className + "\" by a &lt;" + tagName + "&gt; element");  
+        },
+        
+        _considerUsingNewInputTypes: function() {
+            var inputTypes = ["color", "date", "datetime", "datetime-local", "email", "month", "number", "range", "search", "tel", "time", "url", "week"];
+            this._addInfo("Consider replacing &lt;input type='text'&gt; element(s) with new input types (" + inputTypes.join(", ") + ") when applicable");
+        },
+        
+        _implementTablelessDesign: function() {
+            this._addInfo("Presence of &lt;table&gt; element(s) has been detected; be sure to use them only for tabular data and not for layout purposes");
+        },
+        
+        _replaceByTag: function(deprecatedTag, recommendedTag) {
+            this._addError("Use &lt;" + recommendedTag + "&gt; instead of &lt;" + deprecatedTag + "&gt;");
+        },
+        
+        _dontUseTag: function(tagName) {
+            this._addError("Don't use &lt;" + tagName + "&gt;");  
+        },
+        
+        _useCssInsteadOfTag: function(tagName) {
+            this._addError("Don't use &lt;" + tagName + "&gt; and use CSS for this purpose")  
+        },
+        
+        _dontUseInlineStyles: function() {
+            this._addError("Don't use inline styles and use CSS for this purpose")
         },
         
         _isInitialized: false,
